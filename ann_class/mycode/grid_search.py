@@ -2,7 +2,7 @@ import sys
 sys.path.append('../../ann_logistic_extra')
 
 from process import get_data
-
+import itertools
 from sklearn.neural_network import MLPClassifier
 from sklearn.utils import shuffle
 
@@ -16,10 +16,13 @@ def _grid_search(hyperparameters):
 	Xtest, Ytest = shuffle(Xtest, Ytest)
 	values = []
 	keys = []
-	for k, v in hyperparameters:
+	for k, v in hyperparameters.items():
 		keys.append(k)
 		values.append(v)
-	combinations = list(itertools.product(*v))
+	print(keys)
+	print(values)
+	combinations = list(itertools.product(*values))
+	print(combinations)
 	best_params = {}
 	best_accuracy = 0
 	for c in combinations:
@@ -43,7 +46,7 @@ def _grid_search(hyperparameters):
 def main():
 
 	
-	hyperparameters = {'learning_rate_init': [1e-2,1e-4,1e-6], 'hidden_layer_sizes': [(5,5),(5,5,5),(10,10)], 'activation': ['relu','tanh']}
+	hyperparameters = {'learning_rate_init': [1e-2,1e-4,1e-6], 'hidden_layer_sizes': [(5,5),(5,5,5),(10,10)], 'activation': ['relu','tanh'], 'max_iter': [500,1000,2000]}
 	_grid_search(hyperparameters)
 
 	'''

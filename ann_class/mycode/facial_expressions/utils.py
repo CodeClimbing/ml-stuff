@@ -4,7 +4,7 @@ from builtins import range
 import numpy as np
 import pandas as pd
 import os
-
+import sklearn
 
 dir_path = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 
@@ -102,6 +102,14 @@ def get_binary_data(balance=True):
 	return X / X.max(), Y
 
 
+
+
+'''
+Start Activation functions section
+'''
+
+ACTIVATIONS = {'relu': relu, 'tanh': tanh, 'logistic': sigmoid, 'softmax': softmax}
+
 def relu(Array):
 	result = Array * (Array > 0)
 	return result
@@ -123,7 +131,61 @@ def softmax(Array):
 	result = expA / expA.sum(axis=1,keepdims=True)
 	return result
 
-ACTIVATIONS = {'relu': relu, 'tanh': tanh, 'logistic': sigmoid, 'softmax': softmax}
+
+
+
+'''
+Derivatives of activation functions
+'''
+
+DERIVATIVES = {'relu': relu_derivative,
+			   'tanh': tanh_derivative,
+			   'sigmoid': sigmoid_derivative
+				}
+
+def relu_derivative(Z, delta):
+	delta[Z==0] = 0
+
+
+def tanh_derivative(Z, delta):
+	delta *= (1 - Z ** 2)
+
+
+def sigmoid_derivative(Z, delta):
+	delta *= (Z * (1 - Z))
+
+
+'''
+Loss functions for regression, binary output, multiclass
+'''
+
+def binary_log_loss(y, y_pred):
+	return -np.mean(y * np.log(y_pred) + (1 - y) * np.log(1 - y_pred))
+
+
+def log_loss(y, y_pred):
+
+	# Make sure y_pred doesn't have zero values, so we won't see an error when taking the log
+	y_pred = np.clip(y_pred,1e-12, (1-1e-12))
+
+	# Makes it work like binary_log_loss if there is only one output
+	if y_pred.shape[1] == 1:
+		y_pred = np.append(y_pred, 1-y_pred,axis=1)
+	if y.shape[1] == 1:
+		y = np.append(y, 1-y, axis=1)
+
+	return 	-np.mean(y * np.log(y_pred))
+
+
+def squared_loss(y, y_pred):
+	return np.mean((y - y_pred)**2)
+
+
+LOSS_FUNCTIONS = {
+					'squared_loss': squared_loss, 
+					'log_loss': log_loss,
+					'binary_log_loss': binary_log_loss
+					}
 
 
 def to_indicator_matrix(array):
@@ -139,7 +201,7 @@ def to_indicator_matrix(array):
 # output: Xtrain, Xtest, Ytrain, Ytest where Y is an indicator matrix
 def get_train_test(X,y,percent_train,shuffle=True):
 	if shuffle:
-		X, y = shuffle(X, y)
+		X, y = sklearn.utils.shuffle(X, y)
 	n, d = X.shape
 	Y = to_indicator_matrix(y)
 	k = Y.shape[1]
